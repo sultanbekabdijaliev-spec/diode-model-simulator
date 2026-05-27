@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>p-n o‘tish va Shottki diodi modeli</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f3f6fb;
+      color: #172033;
+    }
+
+    header {
+      background: linear-gradient(135deg, #1e40af, #0f766e);
+      color: white;
+      padding: 24px 16px;
+      text-align: center;
+    }
+
+    header h1 {
+      margin: 0 0 8px;
+      font-size: 26px;
+    }
+
+    header p {
+      margin: 0;
+      font-size: 15px;
+      opacity: 0.95;
+      line-height: 1.45;
+    }
+
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 18px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 18px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+      border: 1px solid #e5e7eb;
+    }
+
+    h2 {
+      margin: 0 0 14px;
+      font-size: 20px;
+    }
+
+    h3 {
+      margin: 18px 0 10px;
+      font-size: 16px;
+      color: #1e40af;
+    }
+
+    label {
+      display: block;
+      margin: 12px 0 6px;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px 11px;
+      border: 1px solid #cbd5e1;
+      border-radius: 12px;
+      font-size: 14px;
+      background: #fff;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 16px;
+      padding: 13px;
+      border: none;
+      border-radius: 14px;
+      color: white;
+      background: #2563eb;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button.secondary { background: #475569; }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .result {
+      margin-top: 14px;
+      background: #eef6ff;
+      border-left: 4px solid #2563eb;
+      border-radius: 12px;
+      padding: 12px;
+      line-height: 1.5;
+      font-size: 14px;
+    }
+
+    .formula {
+      background: #0f172a;
+      color: #e2e8f0;
+      padding: 12px;
+      border-radius: 12px;
+      overflow-x: auto;
+      font-family: Consolas, monospace;
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .tab {
+      border: 1px solid #cbd5e1;
+      background: #f8fafc;
+      color: #172033;
+      margin: 0;
+    }
+
+    .tab.active {
+      background: #0f766e;
+      color: white;
+      border-color: #0f766e;
+    }
+
+    canvas {
+      width: 100% !important;
+      min-height: 430px;
+    }
+
+    .note {
+      margin-top: 14px;
+      color: #64748b;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .comparison {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .mini {
+      background: #f8fafc;
+      padding: 12px;
+      border-radius: 14px;
+      border: 1px solid #e2e8f0;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 850px) {
+      .grid { grid-template-columns: 1fr; }
+      .comparison { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>p-n o‘tish va Shottki diodi modeli</h1>
+    <p>O‘quv maqsadidagi web-simulyator: parametrlarni o‘zgartiring va V–A xarakteristikani taqqoslang.</p>
+  </header>
+
+  <main>
+    <div class="grid">
+      <section class="card">
+        <h2>Model sozlamalari</h2>
+
+        <div class="tabs">
+          <button class="tab active" id="pnTab">p-n diod</button>
+          <button class="tab" id="schottkyTab">Shottki diod</button>
+        </div>
+
+        <label for="diodeType">Diod turi</label>
+        <select id="diodeType">
+          <option value="pn">p-n o‘tish diodi</option>
+          <option value="schottky">Shottki diodi</option>
+          <option value="both">Ikkalasini taqqoslash</option>
+        </select>
+
+        <h3>Umumiy parametrlar</h3>
+        <div class="row">
+          <div>
+            <label for="temperature">Harorat T (K)</label>
+            <input id="temperature" type="number" value="300" step="1" />
+          </div>
+          <div>
+            <label for="vmax">Vmax (V)</label>
+            <input id="vmax" type="number" value="0.8" step="0.05" />
+          </div>
+        </div>
+
+        <h3>p-n diod parametrlari</h3>
+        <label for="pnIs">To‘yinish toki Is (A)</label>
+        <input id="pnIs" type="text" value="1e-12" />
+
+        <label for="pnN">Ideallik koeffitsiyenti n</label>
+        <input id="pnN" type="number" value="1.8" step="0.1" />
+
+        <h3>Shottki diod parametrlari</h3>
+        <label for="schIs">To‘yinish toki Is (A)</label>
+        <input id="schIs" type="text" value="1e-8" />
+
+        <label for="schN">Ideallik koeffitsiyenti n</label>
+        <input id="schN" type="number" value="1.15" step="0.05" />
+
+        <button id="calculateBtn">Grafikni hisoblash</button>
+        <button class="secondary" id="resetBtn">Standart qiymatlar</button>
+
+        <div class="result" id="resultBox">
+          Natija shu yerda ko‘rinadi.
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>V–A xarakteristika grafigi</h2>
+        <canvas id="diodeChart"></canvas>
+        <div class="note">
+          Grafikda tok amperda berilgan. p-n diod odatda yuqoriroq kuchlanishda sezilarli tok o‘tkazadi, Shottki diod esa pastroq kuchlanishda tezroq ochiladi.
+        </div>
+      </section>
+    </div>
+
+    <section class="card" style="margin-top:18px;">
+      <h2>Fizik model</h2>
+      <div class="formula">
+        I = Is · ( exp( V / (n · Vt) ) - 1 )<br>
+        Vt = kT / q ≈ 0.02585 V, T = 300 K bo‘lganda<br><br>
+        Bu yerda:<br>
+        I  — diod toki<br>
+        Is — teskari to‘yinish toki<br>
+        V  — diodga berilgan kuchlanish<br>
+        n  — ideallik koeffitsiyenti<br>
+        Vt — termik kuchlanish
+      </div>
+
+      <div class="comparison">
+        <div class="mini">
+          <b>p-n o‘tish diodi</b><br>
+          Yarimo‘tkazgichning p-tip va n-tip sohalari tutashganda hosil bo‘ladi. To‘siq potensiali nisbatan kattaroq. Ko‘pincha 0.6–0.7 V atrofida sezilarli ochiladi.
+        </div>
+        <div class="mini">
+          <b>Shottki diodi</b><br>
+          Metall va yarimo‘tkazgich kontaktidan hosil bo‘ladi. To‘siq kichikroq bo‘lgani uchun pastroq kuchlanishda ochiladi. Tezkor elektron qurilmalarda ko‘p ishlatiladi.
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const q = 1.602176634e-19;
+    const k = 1.380649e-23;
+
+    const diodeType = document.getElementById("diodeType");
+    const temperature = document.getElementById("temperature");
+    const vmax = document.getElementById("vmax");
+    const pnIs = document.getElementById("pnIs");
+    const pnN = document.getElementById("pnN");
+    const schIs = document.getElementById("schIs");
+    const schN = document.getElementById("schN");
+    const resultBox = document.getElementById("resultBox");
+    const calculateBtn = document.getElementById("calculateBtn");
+    const resetBtn = document.getElementById("resetBtn");
+    const pnTab = document.getElementById("pnTab");
+    const schottkyTab = document.getElementById("schottkyTab");
+
+    const ctx = document.getElementById("diodeChart");
+    let chart;
+
+    function thermalVoltage(T) {
+      return (k * T) / q;
+    }
+
+    function diodeCurrent(V, Is, n, Vt) {
+      const exponent = V / (n * Vt);
+      if (exponent > 80) return Is * Math.exp(80);
+      return Is * (Math.exp(exponent) - 1);
+    }
+
+    function makeData(Is, n, T, maxV) {
+      const Vt = thermalVoltage(T);
+      const data = [];
+      const points = 120;
+
+      for (let i = 0; i <= points; i++) {
+        const V = (maxV * i) / points;
+        const I = diodeCurrent(V, Is, n, Vt);
+        data.push({ x: V, y: I });
+      }
+      return data;
+    }
+
+    function formatCurrent(I) {
+      if (I === 0) return "0 A";
+      if (Math.abs(I) < 1e-6) return I.toExponential(3) + " A";
+      if (Math.abs(I) < 1e-3) return (I * 1e6).toFixed(3) + " µA";
+      if (Math.abs(I) < 1) return (I * 1e3).toFixed(3) + " mA";
+      return I.toFixed(3) + " A";
+    }
+
+    function updateTabs() {
+      pnTab.classList.toggle("active", diodeType.value === "pn");
+      schottkyTab.classList.toggle("active", diodeType.value === "schottky");
+    }
+
+    function calculate() {
+      const type = diodeType.value;
+      const T = Number(temperature.value);
+      const maxV = Number(vmax.value);
+      const pnIsValue = Number(pnIs.value);
+      const pnNValue = Number(pnN.value);
+      const schIsValue = Number(schIs.value);
+      const schNValue = Number(schN.value);
+
+      if (!T || !maxV || !pnIsValue || !pnNValue || !schIsValue || !schNValue) {
+        resultBox.innerHTML = "Iltimos, barcha parametrlarni to‘g‘ri kiriting.";
+        return;
+      }
+
+      const datasets = [];
+      const Vt = thermalVoltage(T);
+
+      if (type === "pn" || type === "both") {
+        datasets.push({
+          label: "p-n diod",
+          data: makeData(pnIsValue, pnNValue, T, maxV),
+          borderWidth: 3,
+          pointRadius: 0,
+          tension: 0.25
+        });
+      }
+
+      if (type === "schottky" || type === "both") {
+        datasets.push({
+          label: "Shottki diod",
+          data: makeData(schIsValue, schNValue, T, maxV),
+          borderWidth: 3,
+          pointRadius: 0,
+          tension: 0.25
+        });
+      }
+
+      if (chart) chart.destroy();
+
+      chart = new Chart(ctx, {
+        type: "line",
+        data: { datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          parsing: false,
+          plugins: {
+            legend: { display: true },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return `${context.dataset.label}: V=${context.parsed.x.toFixed(3)} V, I=${formatCurrent(context.parsed.y)}`;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              type: "linear",
+              title: { display: true, text: "Kuchlanish V (volt)" },
+              min: 0,
+              max: maxV
+            },
+            y: {
+              type: "logarithmic",
+              title: { display: true, text: "Tok I (amper, log masshtab)" },
+              min: 1e-13,
+              ticks: {
+                callback: function(value) {
+                  return Number(value).toExponential(0);
+                }
+              }
+            }
+          }
+        }
+      });
+
+      const pnIat06 = diodeCurrent(0.6, pnIsValue, pnNValue, Vt);
+      const schIat03 = diodeCurrent(0.3, schIsValue, schNValue, Vt);
+
+      resultBox.innerHTML = `
+        <b>Hisoblash bajarildi.</b><br>
+        Termik kuchlanish: <b>${Vt.toFixed(5)} V</b><br>
+        p-n diod toki, V=0.6 V da: <b>${formatCurrent(pnIat06)}</b><br>
+        Shottki diod toki, V=0.3 V da: <b>${formatCurrent(schIat03)}</b><br><br>
+        Xulosa: Shottki diod kichikroq kuchlanishda ham sezilarli tok o‘tkazadi.
+      `;
+
+      updateTabs();
+    }
+
+    pnTab.addEventListener("click", () => {
+      diodeType.value = "pn";
+      calculate();
+    });
+
+    schottkyTab.addEventListener("click", () => {
+      diodeType.value = "schottky";
+      calculate();
+    });
+
+    diodeType.addEventListener("change", calculate);
+    calculateBtn.addEventListener("click", calculate);
+
+    resetBtn.addEventListener("click", () => {
+      temperature.value = 300;
+      vmax.value = 0.8;
+      pnIs.value = "1e-12";
+      pnN.value = 1.8;
+      schIs.value = "1e-8";
+      schN.value = 1.15;
+      diodeType.value = "both";
+      calculate();
+    });
+
+    calculate();
+  </script>
+</body>
+</html>
